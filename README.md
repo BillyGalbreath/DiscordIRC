@@ -3,7 +3,7 @@
 This is not your typical Discord <-> IRC bridge bot.
 
 
-###This bot is designed to be on a ***private*** Discord guild with only 1 user (you).
+### This bot is designed to be on a ***private*** Discord guild with only 1 user (you).
 
 
 All messages sent in chat will be forwarded to IRC as the bot's username. This acts more like a personal irc bouncer, but on Discord.
