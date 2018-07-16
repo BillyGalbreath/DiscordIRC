@@ -33,7 +33,7 @@ public class Window extends Application {
         controller.setBot(bot);
 
         Scene scene = new Scene(root);
-        scene.getStylesheets().add("style.css");
+        scene.getStylesheets().add("/style.css");
 
         stage.setScene(scene);
         stage.show();
