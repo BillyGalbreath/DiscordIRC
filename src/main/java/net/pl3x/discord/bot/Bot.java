@@ -66,7 +66,7 @@ public class Bot {
     }
 
     private String getNick() {
-        return discord.getGuilds().get(0).getSelfMember().getNickname();
+        return discord.getGuilds().get(0).getSelfMember().getEffectiveName();
     }
 
     private IRC getNetwork(TextChannel channel) {

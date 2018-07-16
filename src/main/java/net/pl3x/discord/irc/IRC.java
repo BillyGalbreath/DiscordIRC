@@ -24,7 +24,9 @@ import org.kitteh.irc.client.library.event.helper.ServerMessageEvent;
 import org.kitteh.irc.client.library.event.user.PrivateNoticeEvent;
 import org.kitteh.irc.client.library.event.user.UserQuitEvent;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class IRC {
@@ -96,22 +98,31 @@ public class IRC {
     }
 
     private void sendToDiscord(Channel channel, String username, String message) {
+        Webhook webhook = webhooks.get(getChannel(channel));
+        if (webhook == null) {
+            return;
+        }
         message = message
                 .replace("\u0002", "") // bold
                 .replace("\u001D", "") // italics
                 .replaceAll("\u0003(?:[\\d]{1,2}(?:,[\\d]{1,2})?)?", "") // color codes
         ;
 
+        List<String> split = Arrays.asList(message.split(" "));
+        for (String word : split) {
+            if (word.equalsIgnoreCase(webhook.getGuild().getSelfMember().getEffectiveName())) {
+                split.set(split.indexOf(word), webhook.getGuild().getOwner().getAsMention());
+            }
+        }
+        message = String.join(" ", split);
+
         WebhookMessageBuilder builder = new WebhookMessageBuilder();
         builder.setContent(message);
         builder.setUsername(username);
 
-        Webhook webhook = webhooks.get(getChannel(channel));
-        if (webhook != null) {
-            WebhookClient client = webhook.newClient().build();
-            client.send(builder.build());
-            client.close();
-        }
+        WebhookClient client = webhook.newClient().build();
+        client.send(builder.build());
+        client.close();
     }
 
     public class Listener {
