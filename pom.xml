@@ -42,7 +42,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>net.pl3x.discord.gui.Window</mainClass>
+                            <mainClass>net.pl3x.discord.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -63,15 +63,8 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <minimizeJar>true</minimizeJar>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.zenjava</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>8.8.3</version>
-                <configuration>
-                    <mainClass>your.main.class.which.extends.javafx.Application</mainClass>
                 </configuration>
             </plugin>
         </plugins>
