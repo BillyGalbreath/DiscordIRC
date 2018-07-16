@@ -38,7 +38,7 @@ public class Window extends Application {
         stage.setScene(scene);
         stage.show();
 
-        if (!controller.token.getText().isEmpty()) {
+        if (controller.token.getText() != null && !controller.token.getText().isEmpty()) {
             controller.connect.requestFocus();
         }
     }
