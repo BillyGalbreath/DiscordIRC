@@ -31,9 +31,10 @@ import java.util.Map;
 
 public class IRC {
     private Bot bot;
-    private Client client;
     private Category category;
     private String password;
+
+    public Client client;
 
     private Map<TextChannel, Webhook> webhooks = new HashMap<>();
 

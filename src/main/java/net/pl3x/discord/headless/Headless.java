@@ -57,6 +57,8 @@ public class Headless {
                         case "terminate":
                             bot.disconnect();
                             return;
+                        default:
+                            System.out.println("Unknown command...");
                     }
                 } catch (IOException ignore) {
                 }
