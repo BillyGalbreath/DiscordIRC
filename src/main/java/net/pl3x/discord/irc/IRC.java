@@ -5,25 +5,10 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.Webhook;
 import net.dv8tion.jda.webhook.WebhookClient;
 import net.dv8tion.jda.webhook.WebhookMessageBuilder;
-import net.engio.mbassy.listener.Handler;
 import net.pl3x.discord.bot.Bot;
+import net.pl3x.discord.listener.IRCListener;
 import org.kitteh.irc.client.library.Client;
-import org.kitteh.irc.client.library.command.UserModeCommand;
-import org.kitteh.irc.client.library.defaults.element.mode.DefaultUserMode;
 import org.kitteh.irc.client.library.element.Channel;
-import org.kitteh.irc.client.library.event.channel.ChannelCtcpEvent;
-import org.kitteh.irc.client.library.event.channel.ChannelJoinEvent;
-import org.kitteh.irc.client.library.event.channel.ChannelKickEvent;
-import org.kitteh.irc.client.library.event.channel.ChannelMessageEvent;
-import org.kitteh.irc.client.library.event.channel.ChannelNoticeEvent;
-import org.kitteh.irc.client.library.event.channel.ChannelPartEvent;
-import org.kitteh.irc.client.library.event.channel.ChannelTargetedMessageEvent;
-import org.kitteh.irc.client.library.event.channel.ChannelTargetedNoticeEvent;
-import org.kitteh.irc.client.library.event.client.ClientConnectionEndedEvent;
-import org.kitteh.irc.client.library.event.client.ClientNegotiationCompleteEvent;
-import org.kitteh.irc.client.library.event.helper.ServerMessageEvent;
-import org.kitteh.irc.client.library.event.user.PrivateNoticeEvent;
-import org.kitteh.irc.client.library.event.user.UserQuitEvent;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,19 +16,36 @@ import java.util.List;
 import java.util.Map;
 
 public class IRC {
-    private Bot bot;
-    private Category category;
-    private String password;
-    private String address;
+    private final Bot bot;
+    private final Category category;
+    private final String password;
+    private final String address;
 
-    public Client client;
+    private Client client;
 
-    private Map<TextChannel, Webhook> webhooks = new HashMap<>();
+    private final Map<TextChannel, Webhook> webhooks = new HashMap<>();
 
     public IRC(Bot bot, Category category, String password) {
         this.bot = bot;
         this.category = category;
         this.password = password;
+        this.address = category.getName();
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public Bot getBot() {
+        return bot;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getAddress() {
+        return address;
     }
 
     public void changeNick(String nick) {
@@ -51,7 +53,6 @@ public class IRC {
     }
 
     public void connect(String nick) {
-        address = category.getName();
         disconnect();
         client = Client.builder()
                 .realName(nick)
@@ -59,7 +60,7 @@ public class IRC {
                 .user(nick)
                 .serverHost(category.getName())
                 .buildAndConnect();
-        client.getEventManager().registerEventListener(new Listener());
+        client.getEventManager().registerEventListener(new IRCListener(this));
     }
 
     public void disconnect() {
@@ -101,7 +102,7 @@ public class IRC {
         client.sendCtcpMessage(channel, "ACTION " + message);
     }
 
-    private void sendToDiscord(Channel channel, String username, String message) {
+    public void sendToDiscord(Channel channel, String username, String message) {
         Webhook webhook = webhooks.get(getChannel(channel));
         if (webhook == null) {
             return;
@@ -127,114 +128,5 @@ public class IRC {
         WebhookClient client = webhook.newClient().build();
         client.send(builder.build());
         client.close();
-    }
-
-    public class Listener {
-        @Handler
-        public void onClientConnected(ClientNegotiationCompleteEvent event) {
-            System.out.println("IRC: Connected to " + address);
-
-            if (password != null && !password.isEmpty()) {
-                client.sendMessage("NickServ", "identify " + password);
-                bot.getStorage().setPassword(password);
-            }
-
-            new UserModeCommand(client).add(true, new DefaultUserMode(client, 'g')).execute();
-        }
-
-        @Handler
-        public void onClientDisconnect(ClientConnectionEndedEvent event) {
-            System.out.println("IRC: Disconnected from " + address);
-        }
-
-        @Handler
-        public void onPrivateNotice(PrivateNoticeEvent event) {
-            System.out.println(event.getActor().getNick() + ": " + event.getMessage());
-        }
-
-        @Handler
-        public void onJoinChannel(ChannelJoinEvent event) {
-            if (event.getClient().isUser(event.getActor())) {
-                System.out.println("IRC: Joined " + event.getChannel().getName() + " on " + address);
-                return; // ignore echo
-            }
-            sendToDiscord(event.getChannel(), "* " + event.getActor().getNick(), "_has joined_");
-        }
-
-        @Handler
-        public void onPartChannel(ChannelPartEvent event) {
-            if (event.getClient().isUser(event.getActor())) {
-                System.out.println("IRC: Parted " + event.getChannel().getName() + " on " + address);
-                return; // ignore echo
-            }
-            sendToDiscord(event.getChannel(), "* " + event.getActor().getNick(), "_has left (" + event.getMessage() + ")_");
-        }
-
-        @Handler
-        public void onKickChannel(ChannelKickEvent event) {
-            if (event.getClient().isUser(event.getUser())) {
-                System.out.println("IRC: Kicked from " + event.getChannel().getName() + " on " + address + " for " + event.getMessage());
-                return; // ignore echo
-            }
-            sendToDiscord(event.getChannel(), "* " + event.getUser().getNick(), "_was kicked (" + event.getMessage() + ")_");
-        }
-
-        @Handler
-        public void onUserQuitServer(UserQuitEvent event) {
-            if (event.getClient().isUser(event.getActor())) {
-                return; // ignore echo
-            }
-            event.getActor().getChannels().forEach(name ->
-                    client.getChannel(name).ifPresent(channel ->
-                            sendToDiscord(channel, "* " + event.getActor().getNick(), "_has quit (" + event.getMessage() + ")_")));
-        }
-
-        @Handler
-        public void onNoticeChannel(ChannelNoticeEvent event) {
-            if (event.getClient().isUser(event.getActor())) {
-                return; // ignore echo
-            }
-            sendToDiscord(event.getChannel(), "* " + event.getActor().getNick(), "_**" + event.getMessage() + "**_");
-        }
-
-        @Handler
-        public void onTargetNoticeChannel(ChannelTargetedNoticeEvent event) {
-            if (event.getClient().isUser(event.getActor())) {
-                return; // ignore echo
-            }
-            sendToDiscord(event.getChannel(), "* " + event.getActor().getNick(), "_**" + event.getMessage() + "**_");
-        }
-
-        @Handler
-        public void onMessageReceived(ChannelMessageEvent event) {
-            if (event.getClient().isUser(event.getActor())) {
-                return; // ignore echo
-            }
-            sendToDiscord(event.getChannel(), event.getActor().getNick(), event.getMessage());
-        }
-
-        @Handler
-        public void onTargetMessageReceived(ChannelTargetedMessageEvent event) {
-            if (event.getClient().isUser(event.getActor())) {
-                return; // ignore echo
-            }
-            sendToDiscord(event.getChannel(), event.getActor().getNick(), event.getMessage());
-        }
-
-        @Handler
-        public void onActionReceived(ChannelCtcpEvent event) {
-            if (event.getClient().isUser(event.getActor())) {
-                return; // ignore echo
-            }
-            if (event.getMessage().startsWith("ACTION ")) {
-                sendToDiscord(event.getChannel(), "* " + event.getActor().getNick(), "_**" + event.getMessage().substring(7) + "**_");
-            }
-        }
-
-        // test for any missing/unknown events
-        @Handler
-        public void onMessageReceived(ServerMessageEvent event) {
-            //System.out.println("RAW: " + event);
-        }
     }
 }

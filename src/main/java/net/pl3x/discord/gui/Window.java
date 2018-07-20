@@ -9,7 +9,7 @@ import net.pl3x.discord.bot.Bot;
 
 public class Window extends Application {
     private Stage stage;
-    private Bot bot;
+    private final Bot bot;
 
     public Window() {
         bot = new Bot();
