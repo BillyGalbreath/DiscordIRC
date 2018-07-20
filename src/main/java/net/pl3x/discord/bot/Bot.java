@@ -119,7 +119,8 @@ public class Bot {
         }
 
         public void onException(ExceptionEvent event) {
-            // TODO ?
+            System.out.println("Bot threw an exception!");
+            System.out.println(event);
         }
 
         public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
