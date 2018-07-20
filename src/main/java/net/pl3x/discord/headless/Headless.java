@@ -42,5 +42,23 @@ public class Headless {
         }
 
         bot.connect(token, password);
+
+        new Thread(() -> {
+            while (true) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                try {
+                    Thread.sleep(50L);
+                    String input = reader.readLine();
+                    if (input.equalsIgnoreCase("stop") ||
+                            input.equalsIgnoreCase("quit") ||
+                            input.equalsIgnoreCase("end") ||
+                            input.equalsIgnoreCase("bye")) {
+                        break;
+                    }
+                } catch (Exception ignore) {
+                }
+            }
+            bot.disconnect();
+        }).start();
     }
 }
