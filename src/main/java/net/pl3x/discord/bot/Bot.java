@@ -187,7 +187,14 @@ public class Bot {
         }
 
         public void onCategoryUpdateName(CategoryUpdateNameEvent event) {
-            // TODO disconnect from old network name and connect to new network name
+            IRC network = networks.remove(event.getCategory());
+            if (network != null) {
+                network.disconnect();
+            }
+            network = new IRC(Bot.this, event.getCategory(), password);
+            network.connect(getNick());
+            networks.put(event.getCategory(), network);
+            event.getCategory().getTextChannels().forEach(network::joinChannel);
         }
 
         public void onGuildMemberNickChange(GuildMemberNickChangeEvent event) {
