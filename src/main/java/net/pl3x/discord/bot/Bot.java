@@ -80,6 +80,8 @@ public class Bot {
     public class Listener extends ListenerAdapter {
         @Override
         public void onReady(ReadyEvent event) {
+            System.out.println("Discord: Connected");
+
             storage.setToken(discord.getToken());
 
             discord.getGuilds().forEach(guild -> {
@@ -94,32 +96,30 @@ public class Bot {
                     category.getTextChannels().forEach(network::joinChannel);
                 });
             });
-
-            System.out.println("Bot connected to Discord!");
         }
 
         public void onResume(ResumedEvent event) {
-            System.out.println("Bot resumed connection to Discord!");
+            System.out.println("Discord: Resumed connection");
         }
 
         public void onReconnect(ReconnectedEvent event) {
-            System.out.println("Bot re-connected to Discord!");
+            System.out.println("Discord: Re-connected");
         }
 
         public void onDisconnect(DisconnectEvent event) {
-            System.out.println("Bot disconnected from Discord!");
+            System.out.println("Discord: Disconnected");
         }
 
         public void onShutdown(ShutdownEvent event) {
-            System.out.println("Bot has shutdown!");
+            System.out.println("Discord: Shutdown");
         }
 
         public void onStatusChange(StatusChangeEvent event) {
-            System.out.println("Bot status changed: " + event.getOldStatus() + " -> " + event.getNewStatus());
+            System.out.println("Discord: Status changed: " + event.getOldStatus() + " -> " + event.getNewStatus());
         }
 
         public void onException(ExceptionEvent event) {
-            System.out.println("Bot threw an exception!");
+            System.out.println("Discord: Exception: ");
             System.out.println(event);
         }
 
@@ -141,6 +141,7 @@ public class Bot {
         }
 
         public void onTextChannelCreate(TextChannelCreateEvent event) {
+            System.out.println("Discord: Channel created: " + event.getChannel().getName());
             IRC network = getNetwork(event.getChannel());
             if (network != null) {
                 network.joinChannel(event.getChannel());
@@ -148,6 +149,7 @@ public class Bot {
         }
 
         public void onTextChannelDelete(TextChannelDeleteEvent event) {
+            System.out.println("Discord: Channel deleted: " + event.getChannel().getName());
             IRC network = getNetwork(event.getChannel());
             if (network != null) {
                 network.leaveChannel(event.getChannel());
@@ -155,6 +157,7 @@ public class Bot {
         }
 
         public void onTextChannelUpdateName(TextChannelUpdateNameEvent event) {
+            System.out.println("Discord: Channel name change: " + event.getOldName() + " -> " + event.getNewName());
             IRC network = networks.get(event.getChannel().getParent());
             if (network != null) {
                 network.client.removeChannel("#" + event.getOldName());
@@ -163,6 +166,7 @@ public class Bot {
         }
 
         public void onTextChannelUpdateParent(TextChannelUpdateParentEvent event) {
+            System.out.println("Discord: Channel moved categories: (" + event.getChannel().getName() + ") " + event.getOldParent().getName() + " -> " + event.getNewParent().getName());
             IRC network = networks.get(event.getOldParent());
             if (network != null) {
                 network.leaveChannel(event.getChannel());
@@ -174,12 +178,14 @@ public class Bot {
         }
 
         public void onCategoryCreate(CategoryCreateEvent event) {
+            System.out.println("Discord: Category created: " + event.getCategory().getName());
             IRC network = new IRC(Bot.this, event.getCategory(), password);
             network.connect(getNick());
             networks.put(event.getCategory(), network);
         }
 
         public void onCategoryDelete(CategoryDeleteEvent event) {
+            System.out.println("Discord: Category deleted: " + event.getCategory().getName());
             IRC network = networks.remove(event.getCategory());
             if (network != null) {
                 network.disconnect();
@@ -187,6 +193,7 @@ public class Bot {
         }
 
         public void onCategoryUpdateName(CategoryUpdateNameEvent event) {
+            System.out.println("Discord: Category name change: " + event.getOldName() + " -> " + event.getNewName());
             IRC network = networks.remove(event.getCategory());
             if (network != null) {
                 network.disconnect();
@@ -198,6 +205,7 @@ public class Bot {
         }
 
         public void onGuildMemberNickChange(GuildMemberNickChangeEvent event) {
+            System.out.println("Discord: Nickname change: " + event.getPrevNick() + " -> " + event.getNewNick());
             if (event.getUser().equals(discord.getSelfUser())) {
                 networks.values().forEach(network -> network.changeNick(getNick()));
             }

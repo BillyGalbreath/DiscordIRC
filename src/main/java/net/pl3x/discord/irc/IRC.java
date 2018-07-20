@@ -19,6 +19,7 @@ import org.kitteh.irc.client.library.event.channel.ChannelNoticeEvent;
 import org.kitteh.irc.client.library.event.channel.ChannelPartEvent;
 import org.kitteh.irc.client.library.event.channel.ChannelTargetedMessageEvent;
 import org.kitteh.irc.client.library.event.channel.ChannelTargetedNoticeEvent;
+import org.kitteh.irc.client.library.event.client.ClientConnectionEndedEvent;
 import org.kitteh.irc.client.library.event.client.ClientNegotiationCompleteEvent;
 import org.kitteh.irc.client.library.event.helper.ServerMessageEvent;
 import org.kitteh.irc.client.library.event.user.PrivateNoticeEvent;
@@ -33,6 +34,7 @@ public class IRC {
     private Bot bot;
     private Category category;
     private String password;
+    private String address;
 
     public Client client;
 
@@ -49,6 +51,7 @@ public class IRC {
     }
 
     public void connect(String nick) {
+        address = category.getName();
         disconnect();
         client = Client.builder()
                 .realName(nick)
@@ -128,7 +131,9 @@ public class IRC {
 
     public class Listener {
         @Handler
-        public void on(ClientNegotiationCompleteEvent event) {
+        public void onClientConnected(ClientNegotiationCompleteEvent event) {
+            System.out.println("IRC: Connected to " + address);
+
             if (password != null && !password.isEmpty()) {
                 client.sendMessage("NickServ", "identify " + password);
                 bot.getStorage().setPassword(password);
@@ -138,13 +143,19 @@ public class IRC {
         }
 
         @Handler
-        public void onJoinChannel(PrivateNoticeEvent event) {
+        public void onClientDisconnect(ClientConnectionEndedEvent event) {
+            System.out.println("IRC: Disconnected from " + address);
+        }
+
+        @Handler
+        public void onPrivateNotice(PrivateNoticeEvent event) {
             System.out.println(event.getActor().getNick() + ": " + event.getMessage());
         }
 
         @Handler
         public void onJoinChannel(ChannelJoinEvent event) {
             if (event.getClient().isUser(event.getActor())) {
+                System.out.println("IRC: Joined " + event.getChannel().getName() + " on " + address);
                 return; // ignore echo
             }
             sendToDiscord(event.getChannel(), "* " + event.getActor().getNick(), "_has joined_");
@@ -153,6 +164,7 @@ public class IRC {
         @Handler
         public void onPartChannel(ChannelPartEvent event) {
             if (event.getClient().isUser(event.getActor())) {
+                System.out.println("IRC: Parted " + event.getChannel().getName() + " on " + address);
                 return; // ignore echo
             }
             sendToDiscord(event.getChannel(), "* " + event.getActor().getNick(), "_has left (" + event.getMessage() + ")_");
@@ -161,6 +173,7 @@ public class IRC {
         @Handler
         public void onKickChannel(ChannelKickEvent event) {
             if (event.getClient().isUser(event.getUser())) {
+                System.out.println("IRC: Kicked from " + event.getChannel().getName() + " on " + address + " for " + event.getMessage());
                 return; // ignore echo
             }
             sendToDiscord(event.getChannel(), "* " + event.getUser().getNick(), "_was kicked (" + event.getMessage() + ")_");
