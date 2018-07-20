@@ -47,18 +47,20 @@ public class Headless {
             while (true) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                 try {
-                    Thread.sleep(50L);
-                    String input = reader.readLine();
-                    if (input.equalsIgnoreCase("stop") ||
-                            input.equalsIgnoreCase("quit") ||
-                            input.equalsIgnoreCase("end") ||
-                            input.equalsIgnoreCase("bye")) {
-                        break;
+                    switch (reader.readLine().toLowerCase()) {
+                        case "stop":
+                        case "quit":
+                        case "end":
+                        case "bye":
+                        case "die":
+                        case "shutdown":
+                        case "terminate":
+                            bot.disconnect();
+                            return;
                     }
-                } catch (Exception ignore) {
+                } catch (IOException ignore) {
                 }
             }
-            bot.disconnect();
         }).start();
     }
 }
