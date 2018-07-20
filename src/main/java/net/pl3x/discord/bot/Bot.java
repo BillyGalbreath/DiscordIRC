@@ -130,7 +130,8 @@ public class Bot {
             IRC network = getNetwork(message.getCategory());
             if (network != null) {
                 String content = message.getContentDisplay();
-                if (content.startsWith("_") && content.endsWith("_")) {
+                if (content.startsWith("_") && content.endsWith("_") ||
+                        content.startsWith("*") && content.endsWith("*")) {
                     network.sendAction("#" + message.getTextChannel().getName(), content.substring(1, content.length() - 1));
                 } else {
                     network.sendMessage("#" + message.getTextChannel().getName(), content);
