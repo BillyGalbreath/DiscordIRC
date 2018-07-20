@@ -157,8 +157,8 @@ public class Bot {
         public void onTextChannelUpdateName(TextChannelUpdateNameEvent event) {
             IRC network = networks.get(event.getChannel().getParent());
             if (network != null) {
-                network.client.removeChannel(event.getOldName());
-                network.client.addChannel(event.getNewName());
+                network.client.removeChannel("#" + event.getOldName());
+                network.client.addChannel("#" +event.getNewName());
             }
         }
 
