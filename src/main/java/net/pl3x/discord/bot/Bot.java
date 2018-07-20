@@ -158,12 +158,19 @@ public class Bot {
             IRC network = networks.get(event.getChannel().getParent());
             if (network != null) {
                 network.client.removeChannel("#" + event.getOldName());
-                network.client.addChannel("#" +event.getNewName());
+                network.client.addChannel("#" + event.getNewName());
             }
         }
 
         public void onTextChannelUpdateParent(TextChannelUpdateParentEvent event) {
-            // TODO part channel from old network and join channel in new network
+            IRC network = networks.get(event.getOldParent());
+            if (network != null) {
+                network.leaveChannel(event.getChannel());
+            }
+            network = networks.get(event.getNewParent());
+            if (network != null) {
+                network.joinChannel(event.getChannel());
+            }
         }
 
         public void onCategoryCreate(CategoryCreateEvent event) {
