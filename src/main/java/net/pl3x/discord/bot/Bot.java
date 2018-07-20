@@ -94,26 +94,28 @@ public class Bot {
                     category.getTextChannels().forEach(network::joinChannel);
                 });
             });
+
+            System.out.println("Bot connected to Discord!");
         }
 
         public void onResume(ResumedEvent event) {
-            // TODO ?
+            System.out.println("Bot resumed connection to Discord!");
         }
 
         public void onReconnect(ReconnectedEvent event) {
-            // TODO ?
+            System.out.println("Bot re-connected to Discord!");
         }
 
         public void onDisconnect(DisconnectEvent event) {
-            // TODO ?
+            System.out.println("Bot disconnected from Discord!");
         }
 
         public void onShutdown(ShutdownEvent event) {
-            // TODO ?
+            System.out.println("Bot has shutdown!");
         }
 
         public void onStatusChange(StatusChangeEvent event) {
-            // TODO ?
+            System.out.println("Bot status changed: " + event.getOldStatus() + " -> " + event.getNewStatus());
         }
 
         public void onException(ExceptionEvent event) {
